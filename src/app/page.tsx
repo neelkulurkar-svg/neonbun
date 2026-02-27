@@ -196,7 +196,7 @@ export default function NeonBunDelivery() {
               <CheckCircle size={48} className="text-[#ffaa00] mx-auto mb-4" />
               <h2 className="text-2xl font-black italic mb-6 uppercase">Logged</h2>
               <div className="bg-white p-4 rounded-3xl mb-6 inline-block">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=YOUR_UPI_ID@fampay&am=${totalPrice}`} className="w-40 h-40" alt="QR" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=8788691102@fam&am=${totalPrice}`} className="w-40 h-40" alt="QR" />
               </div>
               <button onClick={() => setOrderComplete(false)} className="w-full py-4 bg-[#ffaa00] text-black font-black rounded-2xl uppercase">Close & Track</button>
             </div>
