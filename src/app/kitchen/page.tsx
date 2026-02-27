@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Truck, Flame, DollarSign, CheckCircle, Settings, List, MapPin, Send, MessageCircle, X, Plus, Trash2 } from 'lucide-react'; // FIXED: Added MapPin and all other icons
+import { 
+  Truck, Flame, DollarSign, CheckCircle, Settings, 
+  List, MapPin, Send, MessageCircle, X, Plus, Trash2 
+} from 'lucide-react'; // FIXED: Added MapPin icon import
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,16 +27,21 @@ export default function KitchenDashboard() {
     if (menu) setMenuItems(menu);
   };
 
+  // FIXED: Build-safe Realtime Listener
   useEffect(() => {
     fetchData();
-    const ch = supabase.channel('k').on('postgres_changes', { event: '*', table: 'orders' }, fetchData).subscribe();
+    const ch = supabase.channel('k')
+      .on('postgres_changes' as any, { event: '*', table: 'orders', schema: 'public' }, () => fetchData())
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
 
   useEffect(() => {
     if (activeChat) {
       supabase.from('messages').select('*').eq('order_id', activeChat).order('created_at', { ascending: true }).then(({data}) => setMessages(data || []));
-      const sub = supabase.channel('c').on('postgres_changes', { event: 'INSERT', table: 'messages', filter: `order_id=eq.${activeChat}` }, (p) => setMessages(m => [...m, p.new])).subscribe();
+      const sub = supabase.channel('c')
+        .on('postgres_changes' as any, { event: 'INSERT', table: 'messages', schema: 'public', filter: `order_id=eq.${activeChat}` }, (p: any) => setMessages(m => [...m, p.new]))
+        .subscribe();
       return () => { supabase.removeChannel(sub); };
     }
   }, [activeChat]);

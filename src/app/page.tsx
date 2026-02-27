@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, MapPin, CheckCircle, ShoppingCart, Plus, Minus, 
   User, Clock, Flame, Truck, MessageSquare, Send, X 
-} from 'lucide-react'; // FIXED: Added all used icons
+} from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,11 +30,16 @@ export default function NeonBunDelivery() {
     if (savedOrderId) trackOrder(savedOrderId);
   }, []);
 
+  // FIXED: Build-safe Realtime Listener
   useEffect(() => {
     if (activeOrder) {
       const sub = supabase.channel(`chat-${activeOrder.id}`)
-        .on('postgres_changes', { event: 'INSERT', table: 'messages', filter: `order_id=eq.${activeOrder.id}` }, 
-        (p) => setMessages(m => [...m, p.new])).subscribe();
+        .on(
+          'postgres_changes' as any, 
+          { event: 'INSERT', table: 'messages', schema: 'public', filter: `order_id=eq.${activeOrder.id}` }, 
+          (p: any) => setMessages(m => [...m, p.new])
+        )
+        .subscribe();
       return () => { supabase.removeChannel(sub); };
     }
   }, [activeOrder]);
@@ -47,9 +52,10 @@ export default function NeonBunDelivery() {
   const trackOrder = async (id: string) => {
     const { data } = await supabase.from('orders').select('*').eq('id', id).single();
     if (data) setActiveOrder(data);
+    
     supabase.channel(`track-${id}`)
-      .on('postgres_changes', { event: 'UPDATE', table: 'orders', filter: `id=eq.${id}` }, 
-      (payload) => setActiveOrder(payload.new)).subscribe();
+      .on('postgres_changes' as any, { event: 'UPDATE', table: 'orders', schema: 'public', filter: `id=eq.${id}` }, 
+      (payload: any) => setActiveOrder(payload.new)).subscribe();
   };
 
   const addToCart = (item: any) => {
